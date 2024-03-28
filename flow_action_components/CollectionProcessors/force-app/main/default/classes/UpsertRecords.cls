@@ -57,12 +57,6 @@ public with sharing class UpsertRecords {
                 inputCollection.add(inputRecord);
             }
 
-            if (externalIdField != null) {
-                Database.upsert(inputCollection,externalIdField,allOrNone);    
-            } else {
-                Database.upsert(inputCollection,allOrNone);   
-            }
-
             //Create a Results object to hold the return values
             Results response = new Results();
 
