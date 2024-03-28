@@ -1,7 +1,11 @@
 public with sharing class UpsertRecords {
   
-        @InvocableMethod(label='Upsert Records [USF Collection Processor]' category='Util' iconName='resource:CollectionProcessorsSVG:colproc')
-        public static List<Results> execute (List<Request> requestList) {
+    @InvocableMethod(
+        label='Upsert Records [USF Collection Processor]' 
+        category='Util' 
+        iconName='resource:CollectionProcessorsSVG:colproc'
+    )
+    public static List<Results> execute (List<Request> requestList) {
 
         Map<Schema.SObjectField,List<SObject>> recordsByExternalIdField = new Map<Schema.SObjectField,List<SObject>>();
 
