@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField>
+    <fullName>CustomExternalID__c</fullName>
+    <type>Text</type>
+    <length>255</length>
+    <inlineHelpText/>
+    <required>false</required>
+    <unique>false</unique>
+    <externalId>true</externalId>
+    <description>Used for testing External ID fields with UpsertRecords action</description>
+    <label>Custom External ID</label>
+    <securityClassification>Internal</securityClassification>
+</CustomField>

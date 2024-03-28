@@ -3,50 +3,142 @@ public with sharing class UpsertRecordsTest {
     
     @isTest
     public static void canUpsertNewRecords() {
-        List<Account> newAccounts = ListActionsTest.createAccounts(4, false);
-        UpsertRecords.Request curRequest = new UpsertRecords.Request();
-        curRequest.inputCollection = newAccounts;
-        List<UpsertRecords.Request> curRequests = new  List<UpsertRecords.Request>();
-        curRequests.add(curRequest);
-        UpsertRecords.execute(curRequests);
+        Account[] newAccounts = new Account[]{
+            new Account(Name = 'test account 1'),
+            new Account(Name = 'test account 2'),
+            new Account(Name = 'test account 3'),
+            new Account(Name = 'test account 4')
+        };
+        
+        UpsertRecords.Request request = new UpsertRecords.Request();
+        request.inputCollection = newAccounts;
+
+        List<UpsertRecords.Request> requests = new  List<UpsertRecords.Request>();
+        requests.add(request);
+
+        Test.startTest();
+            UpsertRecords.execute(requests);
+        Test.stopTest();
+
         List<Account> retrievedAccounts = [SELECT Id FROM Account WHERE Name != 'foo'];
-        System.assertEquals(4, retrievedAccounts.size());
+
+        Assert.areEqual(4, retrievedAccounts.size(),
+            'Expected 4 accounts to be retrieved, but got ' + retrievedAccounts.size()
+        );
 
     }
 
     @isTest
     public static void canUpsertExistingRecords() {
-        List<Account> newAccounts = ListActionsTest.createAccounts(4, true);
+        Account[] newAccounts = new Account[]{
+            new Account(Name = 'test account 1'),
+            new Account(Name = 'test account 2'),
+            new Account(Name = 'test account 3'),
+            new Account(Name = 'test account 4')
+        };
+        insert newAccounts;
+
         newAccounts[0].Name = 'foo';
 
-        UpsertRecords.Request curRequest = new UpsertRecords.Request();
-        curRequest.inputCollection = newAccounts;
-        List<UpsertRecords.Request> curRequests = new  List<UpsertRecords.Request>();
-        curRequests.add(curRequest);
-        UpsertRecords.execute(curRequests);
-        List<Account> retrievedAccounts = [SELECT Id FROM Account WHERE Name != 'baz'];
-        System.assertEquals(4, retrievedAccounts.size());
-        retrievedAccounts = [SELECT Id FROM Account WHERE Name = 'foo'];
-        System.assertEquals(1, retrievedAccounts.size());
+        UpsertRecords.Request request = new UpsertRecords.Request();
+        request.inputCollection = newAccounts;
+
+        List<UpsertRecords.Request> requests = new  List<UpsertRecords.Request>();
+        requests.add(request);
+
+        Test.startTest();
+            UpsertRecords.execute(requests);
+        Test.stopTest();
+        
+        List<Account> actualAccounts = [SELECT Id FROM Account WHERE Name != 'baz'];
+
+        Assert.areEqual(4, actualAccounts.size(),
+            'Expected 4 accounts to be retrieved, but got ' + actualAccounts.size()
+        );
+        
+        actualAccounts = [SELECT Id FROM Account WHERE Name = 'foo'];
+
+        Assert.areEqual(1, actualAccounts.size(),
+            'Expcted 1 account with name foo, but got ' + actualAccounts.size()
+        );
+
+    }
+
+    @isTest 
+    public static void canUpsertWithExternalId() {
+        Account[] newAccounts = new Account[]{
+            new Account(Name = 'test account 1',CustomExternalId__c = 'foo')
+        };
+        insert newAccounts;
+
+        Account[] accountsToUpsert = new Account[]{
+            new Account(
+                Name = 'test account 1',
+                CustomExternalId__c = 'foo',
+                Description = 'bar'
+            )
+        };
+
+        List<UpsertRecords.Request> requests = new List<UpsertRecords.Request>();
+        UpsertRecords.Request request = new UpsertRecords.Request();
+        request.inputCollection = accountsToUpsert;
+        request.externalIdFieldName = 'Account.CustomExternalId__c';
+        requests.add(request);
+
+        Test.startTest();
+            UpsertRecords.execute(requests);
+        Test.stopTest();
+
+        List<Account> actualAccounts = [SELECT Id, Name, Description FROM Account WHERE Name = 'test account 1'];
+
+        Assert.areEqual(1, actualAccounts.size(),
+            'Expected 1 account with name test account 1, but got ' + actualAccounts.size()
+        );
+
+        Assert.areEqual('bar', actualAccounts[0].Description,
+            'Expected Account.Description to be bar, but it was ' + actualAccounts[0].Description
+        );
 
     }
 
     @isTest
-    public static void canUpsertRecords() {
-        List<UpsertRecords.Request> testUpsert = new List<UpsertRecords.Request>();
-        UpsertRecords.Request recordToTest = new UpsertRecords.Request();
-        recordToTest.objectName = 'Case';
-        recordToTest.serializedRecordData = '[{"attributes":{"type":"Case"},"CaseNumber":"00001026","Status":"Working"}]';
-        testUpsert.add(recordToTest);
-        System.debug(UpsertRecords.execute(testUpsert));
-        List<Case> caseList = [SELECT Id, CaseNumber, Status FROM Case];
-        System.assertEquals(1, caseList.size());
+    public static void canUpsertNewSerializedRecords() {
+        List<UpsertRecords.Request> requests = new List<UpsertRecords.Request>();
+        UpsertRecords.Request request = new UpsertRecords.Request();
+        request.objectName = 'Case';
+        request.serializedRecordData = '[{"attributes":{"type":"Case"},"CaseNumber":"00001026","Status":"Working"}]';
+        requests.add(request);
+        
+        Test.startTest();
+            UpsertRecords.execute(requests);
+        Test.stopTest();
 
-        recordToTest.serializedRecordData = JSON.serialize(caseList);
-        testUpsert.add(recordToTest);
-        System.debug(UpsertRecords.execute(testUpsert));
-        caseList = [SELECT Id, CaseNumber, Status FROM Case];
-        System.assertEquals(1, caseList.size());
+        Case[] actualCases = [SELECT Id, CaseNumber, Status FROM Case];
+        Assert.areEqual(1, actualCases.size(),
+            'Expected 1 case, but got ' + actualCases.size()
+        );
     }
 
+    @isTest
+    public static void canUpsertExistingSerializedRecords() {
+        Case[] newCases = new Case[]{
+            new Case(Status = 'Working')
+        };
+        insert newCases;
+
+        List<UpsertRecords.Request> requests = new List<UpsertRecords.Request>();
+        UpsertRecords.Request request = new UpsertRecords.Request();
+        request.objectName = 'Case';
+        request.serializedRecordData = JSON.serialize(newCases);
+        requests.add(request);
+
+        Test.startTest();
+            UpsertRecords.execute(requests);
+        Test.stopTest();
+
+        Case[] actualCases = [SELECT Id, CaseNumber, Status FROM Case];
+        Assert.areEqual(1, actualCases.size(),
+            'Expected 1 case, but got ' + actualCases.size()
+        );
+    }
 }
