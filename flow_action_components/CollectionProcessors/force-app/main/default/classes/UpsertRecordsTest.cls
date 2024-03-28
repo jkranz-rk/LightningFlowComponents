@@ -43,8 +43,7 @@ public with sharing class UpsertRecordsTest {
         UpsertRecords.Request request = new UpsertRecords.Request();
         request.inputCollection = newAccounts;
 
-        List<UpsertRecords.Request> requests = new  List<UpsertRecords.Request>();
-        requests.add(request);
+        UpsertRecords.Request[] requests = new UpsertRecords.Request[]{request};
 
         Test.startTest();
             UpsertRecords.execute(requests);
@@ -79,11 +78,11 @@ public with sharing class UpsertRecordsTest {
             )
         };
 
-        List<UpsertRecords.Request> requests = new List<UpsertRecords.Request>();
         UpsertRecords.Request request = new UpsertRecords.Request();
         request.inputCollection = accountsToUpsert;
         request.externalIdFieldName = 'Account.CustomExternalId__c';
-        requests.add(request);
+        
+        UpsertRecords.Request[] requests = new UpsertRecords.Request[]{request};
 
         Test.startTest();
             UpsertRecords.execute(requests);
@@ -103,11 +102,11 @@ public with sharing class UpsertRecordsTest {
 
     @isTest
     public static void canUpsertNewSerializedRecords() {
-        List<UpsertRecords.Request> requests = new List<UpsertRecords.Request>();
         UpsertRecords.Request request = new UpsertRecords.Request();
         request.objectName = 'Case';
         request.serializedRecordData = '[{"attributes":{"type":"Case"},"CaseNumber":"00001026","Status":"Working"}]';
-        requests.add(request);
+        
+        UpsertRecords.Request[] requests = new UpsertRecords.Request[]{request};
         
         Test.startTest();
             UpsertRecords.execute(requests);
@@ -126,11 +125,11 @@ public with sharing class UpsertRecordsTest {
         };
         insert newCases;
 
-        List<UpsertRecords.Request> requests = new List<UpsertRecords.Request>();
         UpsertRecords.Request request = new UpsertRecords.Request();
         request.objectName = 'Case';
         request.serializedRecordData = JSON.serialize(newCases);
-        requests.add(request);
+
+        UpsertRecords.Request[] requests = new UpsertRecords.Request[]{request};
 
         Test.startTest();
             UpsertRecords.execute(requests);
