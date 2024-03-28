@@ -29,7 +29,7 @@ public with sharing class UpsertRecords {
                 throw new InvocableActionException('You must pass in either an inputCollection or an inputRecord to the Upsert Records Action');
             }
 
-            if (currRequest.allOrNone != null && currRequest.allOrNone != allOrNone) {
+            if (curRequest.allOrNone != null && curRequest.allOrNone != allOrNone) {
                 throw new InvocableActionException('The allOrNone parameter must be the same for all requests');
             }
             
@@ -41,7 +41,7 @@ public with sharing class UpsertRecords {
                 List<String> parts = curRequest.externalIdFieldName.split('\\.');
                 String externalIdObjectName = parts[0]?.toLowerCase();
                 String externalIdFieldName = parts[1]?.toLowerCase();
-                Map<String, SObjectField> fieldsMapByName = Schema.describeSObjects(new String[]{externalIdObjectName}).getDescribe().fields.getMap();
+                Map<String, SObjectField> fieldsMapByName = Schema.describeSObjects(new String[]{externalIdObjectName})[0].fields.getMap();
                 externalIdField = fieldsMapByName.get(externalIdFieldName);
             }
 
@@ -70,8 +70,8 @@ public with sharing class UpsertRecords {
         }  
         
         for (Schema.SObjectField externalIdField : recordsByExternalIdField.keySet()) {
-            List<SObject> records = recordsByExternalIdField.get(field);
-            if (field == null) {
+            List<SObject> records = recordsByExternalIdField.get(externalIdField);
+            if (externalIdField == null) {
                 Database.upsert(records,allOrNone);
             } else {
                 Database.upsert(records,externalIdField,allOrNone);
